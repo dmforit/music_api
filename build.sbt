@@ -23,7 +23,6 @@ libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.5.4" //org.postgresql.ds.PGSimpleDataSource dependency
 )
 
-
 // Adds additional packages into Twirl
 //TwirlKeys.templateImports += "com.example.controllers._"
 
