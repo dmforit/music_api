@@ -150,19 +150,41 @@ object DBSchema {
   // Schema creating and adding three entities to the database
   val databaseSetup = DBIO.seq(
     Users.schema.create,
-
     Songs.schema.create,
+    Singers.schema.create,
+    MusicBands.schema.create,
+    Albums.schema.create,
 
-    //  Users forceInsertAll Seq(
-    //    User(1, Roles.user, "user", "user@gmail.com", "password"),
-    //    User(2, Roles.admin, "admin", "admin@gmail.com", "password")
-    //  )
-    //
+    Users forceInsertAll Seq(
+      User(10, Roles.user, "user", "user@gmail.com", "password"),
+      User(20, Roles.admin, "admin", "admin@gmail.com", "password")
+    ),
+
     Songs forceInsertAll Seq(
-      Song(1, "Shape of You", "", 4.24, Genres.pop, "", 11),
-      Song(2, "Numb", "", 3.08, Genres.rock, "", 21),
-      Song(3, "Wake me up", "", 4.33, Genres.pop, "", 31)
-    )
+      Song(11, "Shape of You", "", 4.24, Genres.pop, "", Some(14)),
+      Song(21, "Carnival of Rust", "", 4.34, Genres.rock, "", Some(44)),
+      Song(31, "Numb", "", 3.08, Genres.rock, "", Some(24)),
+      Song(31, "Wake me up", "", 4.33, Genres.country, "", None),
+    ),
+
+    Singers forceInsertAll Seq(
+      Entity(12, "Ed Sheeran", ""),
+      Entity(22, "Marko Saaresto", ""),
+      Entity(32, "Avicii", "")
+    ),
+
+    MusicBands forceInsertAll Seq(
+      Entity(13, "Poets of the Fall", ""),
+      Entity(23, "Linkin Park", ""),
+      Entity(33, "Falling in Reverse", "")
+    ),
+
+    Albums forceInsertAll Seq(
+      Entity(14, "Meteora", ""),
+      Entity(24, "Divide", ""),
+      Entity(34, "Carnival of Rust", "")
+    ),
+
   )
 
   def createDatabase: DAO = {

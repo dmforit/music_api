@@ -96,7 +96,7 @@ package object models {
     length: Double,
     genre: Genres.type,
     file: String,
-    albumId: Int)
+    albumId: Option[Int])
 
   case class ActivityList(
     genres: List[String],

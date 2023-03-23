@@ -35,6 +35,9 @@ object graphqlSchema extends App {
         fieldName = "cover",
         field = Field[MyContext, String]("cover", OptionType(StringType))),
       ReplaceField[MyContext, Song](
+        fieldName = "albumId",
+        field = Field[MyContext, String]("albumId", OptionType(StringType))),
+      ReplaceField[MyContext, Song](
         fieldName = "genre",
         field = Field[MyContext, String]("genre", OptionType(StringType))))
 
@@ -119,4 +122,6 @@ object graphqlSchema extends App {
         resolve = c => c.ctx.dao.getSongs),
     )
   )
+
+  val SchemaDefinition = Schema(QueryType)
 }

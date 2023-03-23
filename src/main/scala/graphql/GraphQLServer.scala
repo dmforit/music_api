@@ -1,5 +1,0 @@
-package graphql
-
-object GraphQLServer {
-
-}

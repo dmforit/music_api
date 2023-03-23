@@ -17,6 +17,7 @@ type Song {
     name: String!
     duration: Int!
     file: String!
+    albumId: String
     cover: String
     genre: String
 }
