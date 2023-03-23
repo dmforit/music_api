@@ -1,17 +1,12 @@
 package controllers
 
-import context.MyContext
-
 import javax.inject._
 import play.api.libs.json._
 import play.api.mvc._
 import sangria.execution.{ErrorWithResolver, Executor, QueryAnalysisError}
 import sangria.parser.QueryParser
-
 import scala.util.{Failure, Success}
 import sangria.marshalling.playJson._
-import graphql._
-import mySchema.DBSchema
 import sangria.parser.SyntaxError
 import sangria.ast.Document
 
@@ -25,6 +20,13 @@ import scala.concurrent.Future
 @Singleton
 class HomeController @Inject()(val controllerComponents: ControllerComponents) extends BaseController {
 
+  import context.MyContext
+  import graphql._
+  import mySchema.DBSchema
+
+  private val dao = DBSchema.createDatabase
+
+
   /**
    * Create an Action to render an HTML page.
    *
@@ -35,8 +37,6 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
   def index(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.index())
   }
-
-  private val dao = DBSchema.createDatabase
 
   def graphql: Action[JsValue] = Action.async(parse.json) { request =>
     val query = (request.body \ "query").as[String]
