@@ -1,4 +1,5 @@
 package context
-import mySchema._
+
+import mySchema.DAO
 
 case class MyContext(dao: DAO)

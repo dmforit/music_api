@@ -1,5 +1,7 @@
 package controllers
 
+import context.MyContext
+
 import javax.inject._
 import play.api.libs.json._
 import play.api.mvc._
@@ -11,11 +13,10 @@ import sangria.marshalling.playJson._
 import sangria.parser.SyntaxError
 import sangria.ast.Document
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-
 import graphql.graphqlSchema.SchemaDefinition
-import context.MyContext
+import mySchema.DAO
 import mySchema.DBSchema.createDatabase
 
 /**
@@ -23,8 +24,9 @@ import mySchema.DBSchema.createDatabase
  * application's home page.
  */
 @Singleton
-class HomeController @Inject()(val controllerComponents: ControllerComponents) extends BaseController {
+class HomeController @Inject()(val controllerComponents: ControllerComponents)(implicit val ec: ExecutionContext) extends BaseController {
 
+  val dao: DAO = createDatabase
 
   /**
    * Create an Action to render an HTML page.
@@ -36,6 +38,8 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
   def index(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.index())
   }
+  def parseVariables(variables: String): JsObject =
+    if (variables.trim == "" || variables.trim == "null") Json.obj() else Json.parse(variables).as[JsObject]
 
   def graphQLAction: Action[JsValue] = Action.async(parse.json) { request =>
     val query = (request.body \ "query").as[String]
@@ -45,9 +49,6 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
       case obj: JsObject => Some(obj)
       case _ => None
     }
-
-    def parseVariables(variables: String) =
-      if (variables.trim == "" || variables.trim == "null") Json.obj() else Json.parse(variables).as[JsObject]
 
     QueryParser.parse(query) match {
       // query parsed successfully, time to execute it!
@@ -59,8 +60,6 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents) e
         Future.successful(BadRequest(Json.obj("error" -> error.getMessage)))
     }
   }
-
-  val dao = createDatabase
 
   def executeGraphQLQuery(query: Document, op: Option[String], vars: Option[JsObject]): Future[Result] = {
     Executor.execute(

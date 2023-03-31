@@ -1,7 +1,7 @@
 package object models {
 
   // Enum class for each genre from database
-  case object Genres {
+  object Genres extends Enumeration  {
     val blues: String = "Blues"
     val country: String = "Country"
     val electronic: String = "Electronic"
@@ -60,14 +60,20 @@ package object models {
     auditions: Int,
     songs: List[SongDescriptionInput])
 
-  case class PersonDescription()
+  case class PersonDescription(
+    auditionsNumber: Int,
+    songs: List[SongDescriptionInput],
+    albums: List[AlbumDescription],
+    photoCover: String,
+    firstName: String,
+    secondName: String)
 
   case class SongDescriptionInput(
     name: String,
     duration: Int,
     file: String,
-    cover: String,
-    genre: String)
+    cover: Option[String],
+    genre: Option[String])
 
   case class MusicBandDescription(
     auditionsNumber: Int,
@@ -79,7 +85,7 @@ package object models {
 
   case class User(
     id: Int,
-    role: Roles.type,
+    role: String,
     nickname: String,
     email: String,
     password: String)
@@ -94,9 +100,9 @@ package object models {
     name: String,
     cover: String,
     length: Double,
-    genre: Genres.type,
+    genre: String,
     file: String,
-    albumId: Option[Int])
+    album_id: Option[Int])
 
   case class ActivityList(
     genres: List[String],

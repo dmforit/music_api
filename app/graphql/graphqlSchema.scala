@@ -11,7 +11,7 @@ object graphqlSchema extends App {
     User(1, Roles.user, "user", "user@gmail.com", "password"),
     User(2, Roles.admin, "admin", "admin@gmail.com", "password"))
 
-  val UserType: ObjectType[MyContext, User] =
+  implicit val UserType: ObjectType[MyContext, User] =
     deriveObjectType[MyContext, User](ObjectTypeName("User"))
 
   val RolesEnum = EnumType(
@@ -24,45 +24,38 @@ object graphqlSchema extends App {
         value = Roles.user))
   )
 
-  val MusicBandDescriptionType: InputObjectType[MusicBandDescription] =
-    deriveInputObjectType[MusicBandDescription](
-      InputObjectTypeName("MusicBandDescription"))
+  implicit val MusicBandDescriptionType: InputObjectType[MusicBandDescription] =
+    deriveInputObjectType[MusicBandDescription](InputObjectTypeName("MusicBandDescription"))
 
-  val SongType: ObjectType[MyContext, Song] =
+  implicit val SongType: ObjectType[MyContext, Song] =
     deriveObjectType[MyContext, Song](
       ObjectTypeName("Song"),
-      ReplaceField[MyContext, Song](
-        fieldName = "cover",
-        field = Field[MyContext, String]("cover", OptionType(StringType))),
-      ReplaceField[MyContext, Song](
-        fieldName = "albumId",
-        field = Field[MyContext, String]("albumId", OptionType(StringType))),
-      ReplaceField[MyContext, Song](
-        fieldName = "genre",
-        field = Field[MyContext, String]("genre", OptionType(StringType))))
+      ReplaceField(fieldName = "cover", field =
+        Field("cover", OptionType(StringType),
+          Some("the cover of the song"),
+          resolve = _.value.cover)),
+      ReplaceField(fieldName = "album_id", field =
+        Field("album_id", OptionType(IntType),
+          Some("the cover of the song"),
+          resolve = _.value.album_id)),
+      ReplaceField(fieldName = "genre", field =
+        Field("genre", OptionType(StringType),
+          Some("the genre of the song"),
+          resolve = _.value.genre)))
 
-  val SongDescriptionType: InputObjectType[SongDescriptionInput] =
-    deriveInputObjectType[SongDescriptionInput](
-      InputObjectTypeName("SongDescription"),
-      ReplaceInputField(
-        fieldName = "cover",
-        field = InputField[MyContext, SongDescriptionInput]("cover", OptionType(StringType))),
-      ReplaceInputField(
-        fieldName = "genre",
-        field = InputField[MyContext, SongDescriptionInput]("genre", OptionType(StringType))))
+  implicit val SongDescriptionType: InputObjectType[SongDescriptionInput] =
+    deriveInputObjectType[SongDescriptionInput](InputObjectTypeName("SongDescription"))
 
-  val AlbumType: ObjectType[MyContext, Album] =
-    deriveObjectType[MyContext, Album](ObjectTypeName("Album"))
+  implicit val AlbumType: ObjectType[MyContext, Album] = deriveObjectType[MyContext, Album](ObjectTypeName("Album"))
 
-  val AlbumDescriptionType: InputObjectType[AlbumDescription] =
-    deriveInputObjectType[AlbumDescription](
-      InputObjectTypeName("AlbumDescription"))
+  implicit val AlbumDescriptionType: InputObjectType[AlbumDescription] =
+    deriveInputObjectType[AlbumDescription](InputObjectTypeName("AlbumDescription"))
 
-  val Musician: InterfaceType[Unit, MusicianInterface] =
-    InterfaceType[Unit, MusicianInterface](
+  implicit val Musician: InterfaceType[MyContext, MusicianInterface] =
+    InterfaceType[MyContext, MusicianInterface](
       "Musician",
       "A musician entity for the api",
-      fields[Unit, MusicianInterface](
+      fields[MyContext, MusicianInterface](
         Field("id", IntType,
           resolve = _.value.id),
         Field("auditionsNumber", IntType,
@@ -75,7 +68,7 @@ object graphqlSchema extends App {
       )
     )
 
-  val PersonType: ObjectType[MyContext, Person] =
+  implicit val PersonType: ObjectType[MyContext, Person] =
     deriveObjectType[MyContext, Person](
       ObjectTypeName("Person"),
       AddFields(
@@ -85,7 +78,7 @@ object graphqlSchema extends App {
       Interfaces(Musician)
     )
 
-  val MusicBand: ObjectType[MyContext, MusicBand] =
+  implicit val MusicBand: ObjectType[MyContext, MusicBand] =
     deriveObjectType[MyContext, MusicBand](
       ObjectTypeName("MusicBand"),
       AddFields(
@@ -95,12 +88,11 @@ object graphqlSchema extends App {
       Interfaces(Musician)
     )
 
-  val PersonDescriptionType: InputObjectType[PersonDescription] =
+  implicit val PersonDescriptionType: InputObjectType[PersonDescription] =
     deriveInputObjectType[PersonDescription](
-      InputObjectTypeName("PersonDescription"),
-    )
+      InputObjectTypeName("PersonDescription"))
 
-  val ActivityListType = ObjectType[MyContext, ActivityList](
+  implicit val ActivityListType: ObjectType[MyContext, ActivityList] = ObjectType[MyContext, ActivityList](
     "ActivityList",
     fields[MyContext, ActivityList](
       Field("genre", OptionType(ListType(StringType)),
@@ -112,7 +104,7 @@ object graphqlSchema extends App {
     )
   )
 
-  val Genre = Argument[Genres.type]("genre", OptionType(StringType))
+  val Genre = Argument("genre", StringType, description = "genre of the argument")
 
   val QueryType = ObjectType(
     name = "Query",
