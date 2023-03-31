@@ -1,23 +1,20 @@
 package controllers
 
-import context.MyContext
-
-import javax.inject._
+//import context.MyContext
 import play.api.libs.json._
 import play.api.mvc._
-import sangria.execution.{ErrorWithResolver, Executor, QueryAnalysisError}
-import sangria.parser.QueryParser
-
-import scala.util.{Failure, Success}
+import sangria.execution._
+import sangria.parser.{QueryParser, SyntaxError}
 import sangria.marshalling.playJson._
-import sangria.parser.SyntaxError
-import sangria.ast.Document
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import graphql.graphqlSchema.SchemaDefinition
+import scala.util.{Failure, Success}
+import javax.inject._
+import scala.concurrent.ExecutionContext
+import graphql.graphqlSchema
 import mySchema.DAO
-import mySchema.DBSchema.createDatabase
+//import mySchema.DBSchema.createDatabase
+
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
@@ -26,7 +23,7 @@ import mySchema.DBSchema.createDatabase
 @Singleton
 class HomeController @Inject()(val controllerComponents: ControllerComponents)(implicit val ec: ExecutionContext) extends BaseController {
 
-  val dao: DAO = createDatabase
+//  private val dao: DAO = createDatabase
 
   /**
    * Create an Action to render an HTML page.
@@ -38,10 +35,18 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents)(i
   def index(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.index())
   }
-  def parseVariables(variables: String): JsObject =
+
+  private def parseVariables(variables: String) =
     if (variables.trim == "" || variables.trim == "null") Json.obj() else Json.parse(variables).as[JsObject]
 
-  def graphQLAction: Action[JsValue] = Action.async(parse.json) { request =>
+  lazy val exceptionHandler: ExceptionHandler = ExceptionHandler {
+    case (_, error @ TooComplexQueryError) => HandledException(error.getMessage)
+    case (_, error@MaxQueryDepthReachedError(_)) => HandledException(error.getMessage)
+  }
+
+  case object TooComplexQueryError extends Exception("Query is too expensive.")
+
+  def graphqlBody: Action[JsValue] = Action.async(parse.json) { request =>
     val query = (request.body \ "query").as[String]
     val operation = (request.body \ "operationName").asOpt[String]
     val variables = (request.body \ "variables").toOption.flatMap {
@@ -50,27 +55,36 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents)(i
       case _ => None
     }
 
+    executeQuery(query, variables, operation)
+  }
+
+  private def executeQuery(query: String, variables: Option[JsObject], operation: Option[String]) =
     QueryParser.parse(query) match {
-      // query parsed successfully, time to execute it!
       case Success(queryAst) =>
-        executeGraphQLQuery(queryAst, operation, variables)
+        Executor.execute(
+          graphqlSchema.SchemaDefinition,
+          queryAst,
+          new DAO,
+          operationName = operation,
+          variables = variables getOrElse Json.obj(),
+          exceptionHandler = exceptionHandler,
+          queryReducers = List(
+            QueryReducer.rejectMaxDepth[DAO](15),
+            QueryReducer.rejectComplexQueries[DAO](4000, (_, _) => TooComplexQueryError)),
+          ).map(Ok(_)).recover {
+            case error: QueryAnalysisError => BadRequest(error.resolveError)
+            case error: ErrorWithResolver => InternalServerError(error.resolveError)
+          }
 
       // can't parse GraphQL query, return error
       case Failure(error: SyntaxError) =>
-        Future.successful(BadRequest(Json.obj("error" -> error.getMessage)))
-    }
-  }
+        Future.successful(BadRequest(Json.obj(
+          "syntaxError" -> error.getMessage,
+          "locations" -> Json.arr(Json.obj(
+            "line" -> error.originalError.position.line,
+            "column" -> error.originalError.position.column)))))
 
-  def executeGraphQLQuery(query: Document, op: Option[String], vars: Option[JsObject]): Future[Result] = {
-    Executor.execute(
-      SchemaDefinition,
-      query, MyContext(dao),
-      operationName = op,
-      variables = vars getOrElse Json.obj())
-      .map(Ok(_))
-      .recover {
-        case error: QueryAnalysisError => BadRequest(error.resolveError)
-        case error: ErrorWithResolver => InternalServerError(error.resolveError)
-      }
-  }
+      case Failure(error) =>
+        throw error
+    }
 }

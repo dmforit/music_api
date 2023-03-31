@@ -11,7 +11,7 @@ import scala.language.postfixOps
 object DBSchema {
 
   class UsersTable(tag: Tag) extends Table[User](tag, "music_app.user") {
-    def id: Rep[Int] = column[Int]("id")
+    def id: Rep[Int] = column[Int]("id", O.PrimaryKey)
     def role: Rep[String] = column[String]("role")
     def nickname: Rep[String] = column[String]("nickname")
     def email: Rep[String] = column[String]("email")
@@ -20,21 +20,21 @@ object DBSchema {
   }
 
   class SingersTable(tag: Tag) extends Table[Entity](tag, "singer") {
-    def id: Rep[Int] = column[Int]("id")
+    def id: Rep[Int] = column[Int]("id", O.PrimaryKey)
     def name: Rep[String] = column[String]("name")
     def cover: Rep[String] = column[String]("cover")
     def * : ProvenShape[Entity] = (id, name, cover).mapTo[Entity]
   }
 
   class MusicBandsTable(tag: Tag) extends Table[Entity](tag, "music_band") {
-    def id: Rep[Int] = column[Int]("id")
+    def id: Rep[Int] = column[Int]("id", O.PrimaryKey)
     def name: Rep[String] = column[String]("name")
     def cover: Rep[String] = column[String]("cover")
     def * : ProvenShape[Entity] = (id, name, cover).mapTo[Entity]
   }
 
   class AlbumsTable(tag: Tag) extends Table[Entity](tag, "album") {
-    def id: Rep[Int] = column[Int]("id")
+    def id: Rep[Int] = column[Int]("id", O.PrimaryKey)
     def name: Rep[String] = column[String]("name")
     def cover: Rep[String] = column[String]("cover")
     def * : ProvenShape[Entity] = (id, name, cover).mapTo[Entity]
@@ -48,11 +48,11 @@ object DBSchema {
   }
 
   class SongsTable(tag: Tag) extends Table[Song](tag, "song") {
-    def id: Rep[Int] = column[Int]("id")
+    def id: Rep[Int] = column[Int]("id", O.PrimaryKey)
     def name: Rep[String] = column[String]("name")
-    def cover: Rep[String] = column[String]("cover")
+    def cover: Rep[Option[String]] = column[Option[String]]("cover")
     def length: Rep[Double] = column[Double]("length")
-    def genre: Rep[String] = column[String]("genre")
+    def genre: Rep[Option[String]] = column[Option[String]]("genre")
     def file: Rep[String] = column[String]("file")
     def album_id: Rep[Option[Int]] = column[Option[Int]]("album_id")
     def * : ProvenShape[Song] = (id, name, cover, length, genre, file, album_id).mapTo[Song]
@@ -89,56 +89,56 @@ object DBSchema {
     def * : ProvenShape[(Int, Int)] = (user_id, singer_id)
   }
 
-  val Users = TableQuery[UsersTable]
-  val Singers = TableQuery[SingersTable]
-  val MusicBands = TableQuery[MusicBandsTable]
-  val Albums = TableQuery[AlbumsTable]
-  val AuthorToAlbums = TableQuery[AuthorToAlbumTable]
-  val Songs = TableQuery[SongsTable]
-  val AuthorToSongs = TableQuery[AuthorToAlbumTable]
-  val LikedSongs = TableQuery[LikedSongsTable]
-  val LikedBands = TableQuery[LikedBandsTable]
-  val likedAlbums = TableQuery[LikedAlbumsTable]
-  val LikedSingers = TableQuery[LikedSingersTable]
-
-  val databaseSetup = DBIO.seq(
-    Users forceInsertAll Seq(
-//      User(152452, Roles.user, "user", "user@gmail.com", "password"),
+//  val Users = TableQuery[UsersTable]
+//  val Singers = TableQuery[SingersTable]
+//  val MusicBands = TableQuery[MusicBandsTable]
+//  val Albums = TableQuery[AlbumsTable]
+//  val AuthorToAlbums = TableQuery[AuthorToAlbumTable]
+//  val Songs = TableQuery[SongsTable]
+//  val AuthorToSongs = TableQuery[AuthorToAlbumTable]
+//  val LikedSongs = TableQuery[LikedSongsTable]
+//  val LikedBands = TableQuery[LikedBandsTable]
+//  val likedAlbums = TableQuery[LikedAlbumsTable]
+//  val LikedSingers = TableQuery[LikedSingersTable]
+//
+//  val databaseSetup = DBIO.seq(
+//    Users forceInsertAll Seq(
+//      User(1, Roles.user, "user", "user@gmail.com", "password"),
 //      User(2, Roles.admin, "admin", "admin@gmail.com", "password")
-    ),
-
+//    ),
+//
 //    Songs forceInsertAll Seq(
-//      Song(3, "Shape of You", "", 4.24, Genres.pop, "", Some(14)),
-//      Song(4, "Carnival of Rust", "", 4.34, Genres.rock, "", Some(15)),
-//      Song(5, "Numb", "", 3.08, Genres.rock, "", Some(13)),
-//      Song(6, "Wake me up", "", 4.33, Genres.country, "", None),
+//      Song(1, "Shape of You", "", 4.24, Genres.pop, "", Some(2)),
+//      Song(2, "Carnival of Rust", "", 4.34, Genres.rock, "", Some(3)),
+//      Song(3, "Numb", "", 3.08, Genres.rock, "", Some(1)),
+//      Song(4, "Wake me up", "", 4.33, Genres.country, "", None),
 //    ),
 //
 //    Singers forceInsertAll Seq(
-//      Entity(7, "Ed Sheeran", ""),
-//      Entity(8, "Marko Saaresto", ""),
-//      Entity(9, "Avicii", "")
+//      Entity(1, "Ed Sheeran", ""),
+//      Entity(2, "Marko Saaresto", ""),
+//      Entity(3, "Avicii", "")
 //    ),
 //
 //    MusicBands forceInsertAll Seq(
-//      Entity(10, "Poets of the Fall", ""),
-//      Entity(11, "Linkin Park", ""),
-//      Entity(12, "Falling in Reverse", "")
+//      Entity(1, "Poets of the Fall", ""),
+//      Entity(2, "Linkin Park", ""),
+//      Entity(3, "Falling in Reverse", "")
 //    ),
 //
 //    Albums forceInsertAll Seq(
-//      Entity(13, "Meteora", ""),
-//      Entity(14, "Divide", ""),
-//      Entity(15, "Carnival of Rust", "")
+//      Entity(1, "Meteora", ""),
+//      Entity(2, "Divide", ""),
+//      Entity(3, "Carnival of Rust", "")
 //    ),
-  )
-  def createDatabase: DAO = {
-    val db = Database.forConfig("db")
-
-    Await.result(db.run(databaseSetup), 10 seconds)
-
-    new DAO(db)
-  }
+//  )
+//  def createDatabase: DAO = {
+//    val db = Database.forConfig("db")
+//
+//    Await.result(db.run(databaseSetup), 10 seconds)
+//
+//    new DAO(db)
+//  }
 }
 
 

@@ -1,3 +1,5 @@
+import sangria.execution.deferred.HasId
+
 package object models {
 
   // Enum class for each genre from database
@@ -22,6 +24,14 @@ package object models {
     def photoCover: String
   }
 
+  trait Identifiable {
+    val id: Int
+  }
+
+  object Identifiable {
+    implicit def hasId[T <: Identifiable]: HasId[T, Int] = HasId(_.id)
+  }
+
   final case class Person(
     id: Int,
     auditionsNumber: Int,
@@ -30,7 +40,7 @@ package object models {
     photoCover: String,
     firstName: String,
     secondName: String
-  )  extends MusicianInterface
+  )  extends MusicianInterface with Identifiable
 
   final case class MusicBand(
     id: Int,
@@ -40,7 +50,7 @@ package object models {
     photoCover: String,
     name: String,
     members: List[Person]
-  ) extends MusicianInterface
+  ) extends MusicianInterface with Identifiable
 
   case object Roles {
     val user: String = "User"
@@ -52,7 +62,7 @@ package object models {
     name: String,
     cover: String,
     auditions: Int,
-    songs: List[Song])
+    songs: List[Song]) extends Identifiable
 
   case class AlbumDescription(
     name: String,
@@ -88,21 +98,21 @@ package object models {
     role: String,
     nickname: String,
     email: String,
-    password: String)
+    password: String) extends Identifiable
 
   case class Entity(
     id: Int,
     name: String,
-    cover: String)
+    cover: String) extends Identifiable
 
   case class Song(
     id: Int,
     name: String,
-    cover: String,
+    cover: Option[String],
     length: Double,
-    genre: String,
+    genre: Option[String],
     file: String,
-    album_id: Option[Int])
+    album_id: Option[Int]) extends Identifiable
 
   case class ActivityList(
     genres: List[String],

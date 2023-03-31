@@ -114,7 +114,7 @@ type Query {
 
     recommendSongs(userId: ID!): [Song!]!
 
-    songs(genre: String): [Song!]
+    songs: [Song!]!
     song(name: String!): Song
     songByID(id: ID!): Song
     getAlbums(name: String): [Album!]
