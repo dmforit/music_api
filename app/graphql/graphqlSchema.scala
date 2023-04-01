@@ -10,9 +10,6 @@ import sangria.macros.derive._
 import scala.collection.immutable.Seq
 
 object graphqlSchema {
-//  implicit lazy val UserType: ObjectType[MyContext, User] =
-//    deriveObjectType[MyContext, User](ObjectTypeName("User"))
-//
 //  lazy val RolesEnum = EnumType(
 //    "Roles",
 //    Some("Enum type for users' roles"),
@@ -96,6 +93,12 @@ object graphqlSchema {
 implicit lazy val SongType: ObjectType[DAO, Song] =
   deriveObjectType[DAO, Song](ObjectTypeName("Song"))
 
+implicit lazy val UserType: ObjectType[DAO, User] =
+  deriveObjectType[DAO, User](ObjectTypeName("User"))
+
+implicit lazy val EntityType: ObjectType[DAO, Entity] =
+  deriveObjectType[DAO, Entity](ObjectTypeName("Entity"))
+
 
   val Id: Argument[Int] = Argument("id", IntType)
 
@@ -103,11 +106,10 @@ implicit lazy val SongType: ObjectType[DAO, Song] =
     name = "Query",
     fields = fields[DAO, Unit](
       Field("songs", ListType(SongType), resolve = c => c.ctx.getSongs),
-//      Field("songByID",
-//        OptionType(SongType),
-//        arguments = Id :: Nil,
-//        resolve = c => songsFetcher.deferOpt(c arg Id)
-//      ),
+      Field("users", ListType(UserType), resolve = c => c.ctx.getUsers),
+      Field("singers", ListType(EntityType), resolve = c => c.ctx.getSingers),
+      Field("musicBands", ListType(EntityType), resolve = c => c.ctx.getMusicBands),
+      Field("albums", ListType(EntityType), resolve = c => c.ctx.getAlbums),
     )
   )
 
