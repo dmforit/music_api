@@ -4,21 +4,11 @@ import models._
 import mySchema.DAO
 import sangria.schema._
 import sangria.macros.derive._
-import sangria.marshalling.FromInput
+import sangria.marshalling.{CoercedScalaResultMarshaller, FromInput}
 import sangria.util.tag.@@
 import sangria.validation.Violation
 
 object graphqlSchema {
-//  lazy val RolesEnum = EnumType(
-//    "Roles",
-//    Some("Enum type for users' roles"),
-//    List(
-//      EnumValue("ADMIN",
-//        value = Roles.admin),
-//      EnumValue("USER",
-//        value = Roles.user))
-//  )
-//
 //  implicit lazy val MusicBandDescriptionType: InputObjectType[MusicBandDescription] =
 //    deriveInputObjectType[MusicBandDescription](InputObjectTypeName("MusicBandDescription"))
 
@@ -83,29 +73,9 @@ object graphqlSchema {
 //    )
 //  )
 
-//  val songsFetcher = Fetcher[MyContext, Song, Int](
-//    (ctx: MyContext, ids) => ctx.dao.getSongsByID(ids)
-//  )(Identifiable.hasId)
-
-//  val Resolver = DeferredResolver.fetchers(songsFetcher)
-
   case object ByteArrayCoerceViolation extends Violation {
     override def errorMessage: String = "Error during parsing ByteArray"
   }
-
-//
-//  implicit val ByteArray: ScalarType[Array[Byte]] = ScalarType[Array[Byte]]( //1
-//    "ByteArray",
-//    coerceOutput = (dt, _) => dt.map(_.toChar).mkString,
-//    coerceInput = {
-//      case StringValue(s, _, _, _, _) => Right(s.getBytes())
-//      case _ => Left(ByteArrayCoerceViolation)
-//    },
-//    coerceUserInput = {
-//      case s: String => Right(s.getBytes())
-//      case _ => Left(ByteArrayCoerceViolation)
-//    }
-//  )
 
   implicit val ByteArray: ScalarAlias[Array[Byte], String] = ScalarAlias[Array[Byte], String](
     StringType, _.map(_.toChar).mkString, bytea => Right(bytea.getBytes()))
@@ -125,14 +95,46 @@ object graphqlSchema {
     ReplaceField("cover", Field("cover", OptionType(ByteArray), resolve = _.value.cover))
   )
 
+  implicit val AuthProviderInputType: InputObjectType[AuthProvider] =
+    InputObjectType[AuthProvider](
+      name = "AUTH_PROVIDER",
+      List(
+        InputField("email", StringType),
+        InputField("password", StringType)
+      )
+  )
+
+  implicit val manual: FromInput[AuthProvider] = new FromInput[AuthProvider] {
+    val marshaller: CoercedScalaResultMarshaller = CoercedScalaResultMarshaller.default
+
+    def fromResult(node: marshaller.Node): AuthProvider = {
+      val ad = node.asInstanceOf[Map[String, Any]]
+
+      AuthProvider(
+        email = ad("email").asInstanceOf[String],
+        password = ad("password").asInstanceOf[String],
+      )
+    }
+  }
+
+//  implicit val AuthProviderInputType: InputObjectType[AuthProvider] = deriveInputObjectType[AuthProvider](
+//    InputObjectTypeName("AUTH_PROVIDER")
+//  )
+//  implicit lazy val AuthProviderDataInputType: InputObjectType[AuthProviderData] = deriveInputObjectType[AuthProviderData]()
+
 
   val Id: Argument[Long] = Argument("id", LongType)
   val Ids: Argument[Seq[Long @@ FromInput.CoercedScalaResult]] = Argument("ids", ListInputType(LongType))
+  val NameArg: Argument[String] = Argument("name", StringType)
+  val RoleArg: Argument[String] = Argument("role", StringType)
+  val AuthProviderDataArg: Argument[AuthProvider] = Argument("authProvider", AuthProviderInputType)
 
   val QueryType: ObjectType[DAO, Unit] = ObjectType[DAO, Unit](
     name = "Query",
     fields = fields[DAO, Unit](
-      Field("allSongs", ListType(SongType), resolve = c => c.ctx.getSongs),
+      Field("allSongs",
+        ListType(SongType),
+        resolve = c => c.ctx.getSongs),
       Field("song",
         OptionType(SongType),
         arguments = Id :: Nil,
@@ -144,12 +146,74 @@ object graphqlSchema {
         resolve = c => c.ctx.getSongs(c arg Ids)
       ),
 
-      Field("users", ListType(UserType), resolve = c => c.ctx.getUsers),
-      Field("singers", ListType(EntityType), resolve = c => c.ctx.getSingers),
-      Field("musicBands", ListType(EntityType), resolve = c => c.ctx.getMusicBands),
-      Field("albums", ListType(EntityType), resolve = c => c.ctx.getAlbums),
+      Field("allUsers",
+        ListType(UserType),
+        resolve = c => c.ctx.getUsers),
+      Field("user",
+        OptionType(UserType),
+        arguments = Id :: Nil,
+        resolve = c => c.ctx.getUser(c arg Id)
+      ),
+      Field("users",
+        ListType(UserType),
+        arguments = Ids :: Nil,
+        resolve = c => c.ctx.getUsers(c arg Ids)
+      ),
+
+      Field("allSingers",
+        ListType(EntityType),
+        resolve = c => c.ctx.getSingers),
+      Field("singer",
+        OptionType(EntityType),
+        arguments = Id :: Nil,
+        resolve = c => c.ctx.getSinger(c arg Id)
+      ),
+      Field("singers",
+        ListType(EntityType),
+        arguments = Ids :: Nil,
+        resolve = c => c.ctx.getSingers(c arg Ids)
+      ),
+
+      Field("allMusicBands",
+        ListType(EntityType),
+        resolve = c => c.ctx.getMusicBands),
+      Field("musicBand",
+        OptionType(EntityType),
+        arguments = Id :: Nil,
+        resolve = c => c.ctx.getMusicBand(c arg Id)
+      ),
+      Field("musicBands",
+        ListType(EntityType),
+        arguments = Ids :: Nil,
+        resolve = c => c.ctx.getMusicBands(c arg Ids)
+      ),
+
+      Field("allAlbums",
+        ListType(EntityType),
+        resolve = c => c.ctx.getAlbums),
+      Field("album",
+        OptionType(EntityType),
+        arguments = Id :: Nil,
+        resolve = c => c.ctx.getAlbum(c arg Id)
+      ),
+      Field("albums",
+        ListType(EntityType),
+        arguments = Ids :: Nil,
+        resolve = c => c.ctx.getAlbums(c arg Ids)
+      ),
     )
   )
 
-  val SchemaDefinition: Schema[DAO, Unit] = Schema(QueryType)
+  val MutationType: ObjectType[DAO, Unit] = ObjectType[DAO, Unit](
+    "Mutation",
+    fields[DAO, Unit](
+      Field("addUser",
+        UserType,
+        arguments = RoleArg :: NameArg :: AuthProviderDataArg :: Nil,
+        resolve = c => c.ctx.addUser(c.args.arg(RoleArg), c.args.arg(NameArg), c.args.arg(AuthProviderDataArg))
+      )
+    )
+  )
+
+  val SchemaDefinition: Schema[DAO, Unit] = Schema(QueryType, Some(MutationType))
 }

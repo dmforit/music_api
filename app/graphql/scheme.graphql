@@ -99,6 +99,13 @@ type User {
     password: String!
 }
 
+input UserDescription {
+    name: String!
+    role: Roles!
+    email: String!
+    password: String!
+}
+
 type ActivityList{
     genres: [String!]
     musicians: [Musician!]
@@ -118,15 +125,17 @@ type Query {
     getMusicBand(id: ID!): Musician
     getAlbum(id: ID!): Album
 
-    likeSong(id: ID, name: String!): Song
-    likeAlbum(id: ID, name: String!): Album
-    likeMusician(id: ID, bandName: String, singerName: String): Musician
-    recommendSongs(userId: ID!): [Song!]!
-    get_activity: ActivityList
+#    likeSong(id: ID, name: String!): Song
+#    likeAlbum(id: ID, name: String!): Album
+#    likeMusician(id: ID, bandName: String, singerName: String): Musician
+#    recommendSongs(userId: ID!): [Song!]!
+#    get_activity: ActivityList
 }
 
 type Mutation {
-    addUser(name: String!, role: Roles!): User
+    addUser(data: UserDescription!): User
+    modifyUser(id: ID!, data: UserDescription): User
+    deleteUser(id: ID!): User
 
     addSong(data: SongDescription!): Song
     modifySong(id: ID!, data: SongDescription): Song
@@ -138,11 +147,11 @@ type Mutation {
 
     addMusician(data: PersonDescription!): Person
     modifyMusician(id: ID!, data: PersonDescription): Person
+    deleteMusician(id: ID!): Person
 
     addMusicBand(data: MusicBandDescription!): MusicBand
     modifyMusicBand(id: ID!, data: MusicBandDescription): MusicBand
-
-    deleteMusician(id: ID!): Musician
+    deleteMusicBand(id: ID!): MusicBand
 }
 
 scalar ByteArray

@@ -1,3 +1,4 @@
+import play.api.libs.json.{Json, OFormat}
 import sangria.execution.deferred.HasId
 
 package object models {
@@ -56,6 +57,10 @@ package object models {
     val user: String = "User"
     val admin: String = "Admin"
   }
+
+  case class AuthProvider(email: String, password: String)
+
+//  case class AuthProviderData(auth: AuthProvider)
 
   case class Album(
     id: Long,
