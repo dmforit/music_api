@@ -16,6 +16,7 @@ libraryDependencies += "org.sangria-graphql" %% "sangria-play-json" % "2.0.2"
 libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % Test
 libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-slick" % "5.1.0",
+  "com.typesafe.play" %% "play-slick-evolutions" % "5.1.0",
   "org.postgresql" % "postgresql" % "42.5.4",
 )
 libraryDependencies ++= Seq(

@@ -16,31 +16,31 @@ type Song {
     id: ID!
     name: String!
     duration: Int!
-    file: String!
+    file: ByteArray!
     albumId: String
-    cover: String
+    cover: ByteArray
     genre: String
 }
 
 input SongDescription {
     name: String!
     duration: Int!
-    file: String!
-    cover: String
+    file: ByteArray!
+    cover: ByteArray
     genre: String
 }
 
 type Album {
     id: ID!
     name: String!
-    cover: String!
+    cover: ByteArray!
     auditions: Int!
     songs: [Song!]!
 }
 
 input AlbumDescription {
     name: String!
-    cover: String!
+    cover: ByteArray!
     auditions: Int!
     songs: [SongDescription!]!
 }
@@ -50,7 +50,7 @@ interface Musician {
     auditionsNumber: Int!
     songs: [Song!]!
     albums: [Album!]
-    photoCover: String!
+    photoCover: ByteArray!
 }
 
 type Person implements Musician {
@@ -58,7 +58,7 @@ type Person implements Musician {
     auditionsNumber: Int!
     songs: [Song!]!
     albums: [Album!]
-    photoCover: String!
+    photoCover: ByteArray!
     firstName: String!
     secondName: String!
 }
@@ -67,7 +67,7 @@ input PersonDescription {
     auditionsNumber: Int!
     songs: [SongDescription!]!
     albums: [AlbumDescription!]
-    photoCover: String!
+    photoCover: ByteArray!
     firstName: String!
     secondName: String!
 }
@@ -77,7 +77,7 @@ type MusicBand implements Musician {
     auditionsNumber: Int!
     songs: [Song!]!
     albums: [Album!]
-    photoCover: String!
+    photoCover: ByteArray!
     name: String!
     members: [Person!]!
 }
@@ -86,7 +86,7 @@ input MusicBandDescription {
     auditionsNumber: Int!
     songs: [SongDescription!]!
     albums: [AlbumDescription!]
-    photoCover: String!
+    photoCover: ByteArray!
     name: String!
     members: [PersonDescription!]!
 }
@@ -106,22 +106,23 @@ type ActivityList{
 }
 
 type Query {
+    getSongs: [Song!]
+    getUsers: [User!]
+    getSingers: [Musician!]
+    getMusicBands: [Musician!]
+    getAlbums: [Album!]
+
     getUser(id: ID!): User
+    getSong(id: ID!): Song
+    getSinger(id: ID!): Musician
+    getMusicBand(id: ID!): Musician
+    getAlbum(id: ID!): Album
 
     likeSong(id: ID, name: String!): Song
     likeAlbum(id: ID, name: String!): Album
     likeMusician(id: ID, bandName: String, singerName: String): Musician
-
     recommendSongs(userId: ID!): [Song!]!
-
-    songs: [Song!]!
-    song(name: String!): Song
-    songByID(id: ID!): Song
-    getAlbums(name: String): [Album!]
-    getMusicians(singerName: String, bandName: String): [Musician!] @format
-
     get_activity: ActivityList
-
 }
 
 type Mutation {
@@ -143,3 +144,5 @@ type Mutation {
 
     deleteMusician(id: ID!): Musician
 }
+
+scalar ByteArray

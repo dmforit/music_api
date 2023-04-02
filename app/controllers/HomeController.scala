@@ -1,6 +1,5 @@
 package controllers
 
-//import context.MyContext
 import play.api.libs.json._
 import play.api.mvc._
 import sangria.execution._
@@ -13,7 +12,7 @@ import javax.inject._
 import scala.concurrent.ExecutionContext
 import graphql.graphqlSchema
 import mySchema.DAO
-//import mySchema.DBSchema.createDatabase
+import mySchema.DBSchema.createDatabase
 
 
 /**
@@ -23,7 +22,7 @@ import mySchema.DAO
 @Singleton
 class HomeController @Inject()(val controllerComponents: ControllerComponents)(implicit val ec: ExecutionContext) extends BaseController {
 
-//  private val dao: DAO = createDatabase
+  private val dao: DAO = createDatabase
 
   /**
    * Create an Action to render an HTML page.
@@ -64,7 +63,7 @@ class HomeController @Inject()(val controllerComponents: ControllerComponents)(i
         Executor.execute(
           graphqlSchema.SchemaDefinition,
           queryAst,
-          new DAO,
+          dao,
           operationName = operation,
           variables = variables getOrElse Json.obj(),
           exceptionHandler = exceptionHandler,

@@ -2,14 +2,14 @@ create schema music_app;
 
 set search_path to music_app;
 
-create type user_role as enum ('Admin', 'User');
-
-create type genre as enum ('Blues', 'Country', 'Electronic', 'HipHop', 'Jazz', 'Pop', 'RnB', 'Rock','Metal', 'Punk');
+-- create type user_role as enum ('Admin', 'User');
+--
+-- create type genre as enum ('Blues', 'Country', 'Electronic', 'HipHop', 'Jazz', 'Pop', 'RnB', 'Rock','Metal', 'Punk');
 
 create table music_app.user
 (
     id       bigserial primary key,
-    role     user_role         not null default 'User'::user_role,
+    role     varchar   not null default 'User',
     nickname character varying not null,
     email    character varying not null,
     password character varying not null
@@ -56,7 +56,7 @@ create table song
     cover    bytea,
     length   double precision  not null,
 
-    genre    genre             not null,
+    genre    varchar             not null,
     file     bytea             not null,
     album_id bigint            not null references album (id) on delete cascade on update cascade
 );

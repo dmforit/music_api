@@ -1,13 +1,12 @@
 package graphql
 
-//import context._
 import models._
 import mySchema.DAO
-import sangria.execution.deferred.{DeferredResolver, Fetcher}
 import sangria.schema._
 import sangria.macros.derive._
-
-import scala.collection.immutable.Seq
+import sangria.marshalling.FromInput
+import sangria.util.tag.@@
+import sangria.validation.Violation
 
 object graphqlSchema {
 //  lazy val RolesEnum = EnumType(
@@ -90,22 +89,61 @@ object graphqlSchema {
 
 //  val Resolver = DeferredResolver.fetchers(songsFetcher)
 
-implicit lazy val SongType: ObjectType[DAO, Song] =
-  deriveObjectType[DAO, Song](ObjectTypeName("Song"))
+  case object ByteArrayCoerceViolation extends Violation {
+    override def errorMessage: String = "Error during parsing ByteArray"
+  }
 
-implicit lazy val UserType: ObjectType[DAO, User] =
-  deriveObjectType[DAO, User](ObjectTypeName("User"))
+//
+//  implicit val ByteArray: ScalarType[Array[Byte]] = ScalarType[Array[Byte]]( //1
+//    "ByteArray",
+//    coerceOutput = (dt, _) => dt.map(_.toChar).mkString,
+//    coerceInput = {
+//      case StringValue(s, _, _, _, _) => Right(s.getBytes())
+//      case _ => Left(ByteArrayCoerceViolation)
+//    },
+//    coerceUserInput = {
+//      case s: String => Right(s.getBytes())
+//      case _ => Left(ByteArrayCoerceViolation)
+//    }
+//  )
 
-implicit lazy val EntityType: ObjectType[DAO, Entity] =
-  deriveObjectType[DAO, Entity](ObjectTypeName("Entity"))
+  implicit val ByteArray: ScalarAlias[Array[Byte], String] = ScalarAlias[Array[Byte], String](
+    StringType, _.map(_.toChar).mkString, bytea => Right(bytea.getBytes()))
 
 
-  val Id: Argument[Int] = Argument("id", IntType)
+  implicit lazy val SongType: ObjectType[DAO, Song] = deriveObjectType[DAO, Song](
+    ObjectTypeName("Song"),
+    ReplaceField("cover", Field("cover", OptionType(ByteArray), resolve = _.value.cover)),
+    ReplaceField("file", Field("file", ByteArray, resolve = _.value.file))
+  )
+
+  implicit lazy val UserType: ObjectType[DAO, User] =
+    deriveObjectType[DAO, User](ObjectTypeName("User"))
+
+  implicit lazy val EntityType: ObjectType[DAO, Entity] = deriveObjectType[DAO, Entity](
+    ObjectTypeName("Entity"),
+    ReplaceField("cover", Field("cover", OptionType(ByteArray), resolve = _.value.cover))
+  )
+
+
+  val Id: Argument[Long] = Argument("id", LongType)
+  val Ids: Argument[Seq[Long @@ FromInput.CoercedScalaResult]] = Argument("ids", ListInputType(LongType))
 
   val QueryType: ObjectType[DAO, Unit] = ObjectType[DAO, Unit](
     name = "Query",
     fields = fields[DAO, Unit](
-      Field("songs", ListType(SongType), resolve = c => c.ctx.getSongs),
+      Field("allSongs", ListType(SongType), resolve = c => c.ctx.getSongs),
+      Field("song",
+        OptionType(SongType),
+        arguments = Id :: Nil,
+        resolve = c => c.ctx.getSong(c arg Id)
+      ),
+      Field("songs",
+        ListType(SongType),
+        arguments = Ids :: Nil,
+        resolve = c => c.ctx.getSongs(c arg Ids)
+      ),
+
       Field("users", ListType(UserType), resolve = c => c.ctx.getUsers),
       Field("singers", ListType(EntityType), resolve = c => c.ctx.getSingers),
       Field("musicBands", ListType(EntityType), resolve = c => c.ctx.getMusicBands),

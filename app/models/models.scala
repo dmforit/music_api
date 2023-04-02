@@ -17,37 +17,37 @@ package object models {
   }
 
   sealed trait MusicianInterface {
-    def id: Int
+    def id: Long
     def auditionsNumber: Int
     def songs: List[Song]
     def albums: List[Album]
-    def photoCover: String
+    def photoCover: Array[Byte]
   }
 
   trait Identifiable {
-    val id: Int
+    val id: Long
   }
 
   object Identifiable {
-    implicit def hasId[T <: Identifiable]: HasId[T, Int] = HasId(_.id)
+    implicit def hasId[T <: Identifiable]: HasId[T, Long] = HasId(_.id)
   }
 
   final case class Person(
-    id: Int,
+    id: Long,
     auditionsNumber: Int,
     songs: List[Song],
     albums: List[Album],
-    photoCover: String,
+    photoCover: Array[Byte],
     firstName: String,
     secondName: String
   )  extends MusicianInterface with Identifiable
 
   final case class MusicBand(
-    id: Int,
+    id: Long,
     auditionsNumber: Int,
     songs: List[Song],
     albums: List[Album],
-    photoCover: String,
+    photoCover: Array[Byte],
     name: String,
     members: List[Person]
   ) extends MusicianInterface with Identifiable
@@ -58,15 +58,15 @@ package object models {
   }
 
   case class Album(
-    id: Int,
+    id: Long,
     name: String,
-    cover: String,
+    cover: Array[Byte],
     auditions: Int,
     songs: List[Song]) extends Identifiable
 
   case class AlbumDescription(
     name: String,
-    cover: String,
+    cover: Array[Byte],
     auditions: Int,
     songs: List[SongDescriptionInput])
 
@@ -74,7 +74,7 @@ package object models {
     auditionsNumber: Int,
     songs: List[SongDescriptionInput],
     albums: List[AlbumDescription],
-    photoCover: String,
+    photoCover: Array[Byte],
     firstName: String,
     secondName: String)
 
@@ -82,37 +82,37 @@ package object models {
     name: String,
     duration: Int,
     file: String,
-    cover: Option[String],
+    cover: Option[Array[Byte]],
     genre: Option[String])
 
   case class MusicBandDescription(
     auditionsNumber: Int,
     songs: List[SongDescriptionInput],
     albums: List[AlbumDescription],
-    photoCover: String,
+    photoCover: Array[Byte],
     name: String,
     members: List[PersonDescription])
 
   case class User(
-    id: Int,
+    id: Long,
     role: String,
     nickname: String,
     email: String,
     password: String) extends Identifiable
 
   case class Entity(
-    id: Int,
+    id: Long,
     name: String,
-    cover: String) extends Identifiable
+    cover: Array[Byte]) extends Identifiable
 
   case class Song(
-    id: Int,
+    id: Long,
     name: String,
-    cover: Option[String],
+    cover: Option[Array[Byte]],
     length: Double,
-    genre: Option[String],
-    file: String,
-    album_id: Option[Int]) extends Identifiable
+    genre: String,
+    file: Array[Byte],
+    album_id: Long) extends Identifiable
 
   case class ActivityList(
     genres: List[String],
